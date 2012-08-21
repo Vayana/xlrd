@@ -20,7 +20,7 @@ def mkargs(**kwargs):
 
 args = mkargs(
     name = 'xlrd',
-    version = '0.7.1',
+    version = '0.7.1vayana',
     author = 'John Machin',
     author_email = 'sjmachin@lexicon.net',
     url = the_url,
