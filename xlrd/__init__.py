@@ -820,6 +820,9 @@ class Book(BaseObject):
     # in the list.
     # <br />  -- New in version 0.6.0
     name_map = {}
+    
+    def has_signatures(self):
+        return  self._has_signatures
 
     def __init__(self):
         self._sheet_list = []
@@ -850,6 +853,8 @@ class Book(BaseObject):
         self.palette_record = []
         self.xf_list = []
         self.style_name_map = {}
+        self._has_signatures = False
+        
 
     def biff2_8_load(self, filename=None, file_contents=None,
         logfile=sys.stdout, verbosity=0, pickleable=True, use_mmap=USE_MMAP,
@@ -924,11 +929,36 @@ class Book(BaseObject):
                 else:
                     raise XLRDError("Can't find workbook in OLE2 compound document")
                 self.stream_len = len(self.mem)
+            self.signature_mem, self.signature_base, self.signature_stream_len = cd.locate_named_stream('_signatures')
+            if self.signature_mem :
+                self._has_signatures = True
+                if DEBUG :
+                    print >> self.logfile, "Signature:: mem: %s, base: %d, len: %d" % (type(self.signature_mem), self.signature_base, self.signature_stream_len)
+            else :
+                dl = cd.dirlist
+                for child in dl[0].children:
+                    node = dl[child] 
+                    if node.name.lower() == (u'_xmlsignatures').lower():
+                        et = node.etype
+                        if et == 2:
+                            self.signature_mem, self.signature_base, self.signature_stream_len = cd.locate_named_stream('_xmlsignatures')
+                            break
+                        if et == 1:
+                            self.signature_mem, self.signature_base, self.signature_stream_len = cd.locate_named_stream('_xmlsignatures/'+dl[node.children[0]].name)
+                            break
+
+            if self.signature_mem :
+                self._has_signatures = True
+                if DEBUG :
+                    print >> self.logfile, "XMLSignature:: mem: %s, base: %d, len: %d" % (type(self.signature_mem), self.signature_base, self.signature_stream_len)
+                    
             del cd
             if self.mem is not filestr:
                 if need_close_filestr:
                     filestr.close()
                 del filestr
+
+        
         self._position = self.base
         if DEBUG:
             print >> self.logfile, "mem: %s, base: %d, len: %d" % (type(self.mem), self.base, self.stream_len)
