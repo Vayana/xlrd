@@ -4,15 +4,7 @@
 import sys
 python_version = sys.version_info[:2]
 
-av = sys.argv
-if len(av) > 1 and av[1].lower() == "--egg":
-    if python_version < (2, 3):
-        raise Exception("Can't lay eggs with Python version %d.%d " % python_version)
-    del av[1]
-    from setuptools import setup
-else:
-    from distutils.core import setup
-
+from setuptools import setup
 the_url = 'http://www.lexicon.net/sjmachin/xlrd.htm'
 
 def mkargs(**kwargs):
